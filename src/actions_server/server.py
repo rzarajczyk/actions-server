@@ -98,6 +98,11 @@ class JsonPost(Action):
         return method == 'POST' and path == self.path
 
     def handle(self, method, path, params, payload) -> Response:
+        if len(payload) > 0:
+            try:
+                payload = json.loads(payload)
+            except Exception as e:
+                raise ValidationException(e)
         output = self.callable(params, payload)
         return JsonOkResponse(output)
 
