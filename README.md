@@ -39,7 +39,7 @@ several requests:
 * `curl -X GET "http://localhost:80/` will send HTTP 301 Redirect to `http://localhost:80/get"
 * `curl -X GET "http://localhost:80/static/aaa.png` will return an image `./src/web/aaa.png`
 
-## Available Actions
+## Actions out-of-the-box
 
 ### `JsonGet(endpoint, callable)`
 
@@ -58,3 +58,30 @@ Will send HTTP 301 Redirect
 ### `StaticResources(path, dir)`
 
 Will server all files from `dir` under path `path`
+
+## Implementing custom action
+
+```python
+from actions_server import *
+
+class MyCustomResponse(Response):
+    def __init__(self, payload):
+        self._payload = payload
+
+    def headers(self) -> dict:
+        return {'Content-type': 'text/plain'}
+
+    def response_body_bytes(self):
+        return self._payload.encode('utf-8')
+
+class MyCustomAction(Action):
+    def can_handle(self, method, path, params, payload):
+        return method == 'GET' and path == '/hello'
+
+    def handle(self, method, path, params, payload) -> Response:
+        return MyCustomResponse("hello there!")
+```
+
+Notes:
+ * parameter `method` may contain two strings - `GET` or `POST`
+ * response body must be bytes!

@@ -2,15 +2,13 @@ import logging
 import unittest
 
 import requests
+from parameterized import parameterized
 
-from server import JsonGet, http_server, Action, JsonPost, Redirect
+from server import JsonGet, http_server, Action, JsonPost, Redirect, StaticResources
 
 logging.basicConfig()
 
 PORT = 9999
-
-r = requests.Session()
-
 
 class ServerTest(unittest.TestCase):
 
@@ -23,7 +21,7 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(JsonGet("/test", lambda params: {'status': 'ok'}))
 
         # when
-        result = r.get(f"http://localhost:{PORT}/test")
+        result = requests.get(f"http://localhost:{PORT}/test")
 
         # then
         self.assertEqual(200, result.status_code)
@@ -34,7 +32,7 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(JsonGet("/test", lambda params: {'params': params}))
 
         # when
-        result = r.get(f"http://localhost:{PORT}/test?a=0&b=6&b=7")
+        result = requests.get(f"http://localhost:{PORT}/test?a=0&b=6&b=7")
 
         # then
         self.assertEqual(200, result.status_code)
@@ -46,7 +44,7 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(JsonPost("/test", lambda params, body: {'status': 'ok'}))
 
         # when
-        result = r.post(f"http://localhost:{PORT}/test")
+        result = requests.post(f"http://localhost:{PORT}/test")
 
         # then
         self.assertEqual(200, result.status_code)
@@ -57,7 +55,7 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(JsonPost("/test", lambda params, body: {'params': params, 'body': body}))
 
         # when
-        result = r.post(f"http://localhost:{PORT}/test?a=0&b=6&b=7", data='{"hello": "POST BODY"}')
+        result = requests.post(f"http://localhost:{PORT}/test?a=0&b=6&b=7", data='{"hello": "POST BODY"}')
 
         # then
         self.assertEqual(200, result.status_code)
@@ -70,7 +68,7 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(JsonPost("/test", lambda params, body: {'body': body}))
 
         # when
-        result = r.post(f"http://localhost:{PORT}/test?a=0&b=6&b=7")
+        result = requests.post(f"http://localhost:{PORT}/test?a=0&b=6&b=7")
 
         # then
         self.assertEqual(200, result.status_code)
@@ -81,7 +79,7 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(JsonPost("/test", lambda params, body: {'body': body}))
 
         # when
-        result = r.post(f"http://localhost:{PORT}/test", data='non-json string')
+        result = requests.post(f"http://localhost:{PORT}/test", data='non-json string')
 
         # then
         self.assertEqual(400, result.status_code)
@@ -91,21 +89,74 @@ class ServerTest(unittest.TestCase):
         self._start_http_server(Redirect("/test", "http://example.com"))
 
         # when:
-        result = r.get(f'http://localhost:{PORT}/test', allow_redirects=False)
+        result = requests.get(f'http://localhost:{PORT}/test', allow_redirects=False)
 
         # then
         self.assertEqual(301, result.status_code)
         self.assertEqual('http://example.com', result.headers['Location'])
 
-    def test_should_return_404_if_action_not_found(self):
+    @parameterized.expand([
+        ["text.txt", 9, "text/plain"],
+        ["image.png", 81618, "image/png"],
+        ["document.pdf", 38078, "application/pdf"]
+    ])
+    def test_should_serve_static_resources(self, filename, expected_length, expected_content_type):
         # given
-        self._start_http_server([])
+        self._start_http_server(StaticResources("/static", "./test-resources"))
 
         # when:
-        result = r.get(f'http://localhost:{PORT}/test')
+        result = requests.get(f'http://localhost:{PORT}/static/{filename}')
+
+        # then
+        self.assertEqual(200, result.status_code)
+        self.assertEqual(expected_length, len(result.content))
+        self.assertEqual(expected_content_type, result.headers['Content-Type'])
+
+    def test_should_serve_static_resources_regardless_slash(self):
+        # given
+        self._start_http_server(StaticResources("/static/", "./test-resources/"))
+
+        # when:
+        result = requests.get(f'http://localhost:{PORT}/static/text.txt')
+
+        # then
+        self.assertEqual(200, result.status_code)
+        self.assertEqual(9, len(result.content))
+
+    def test_should_return_404_if_static_resources_not_found(self):
+        # given
+        self._start_http_server(StaticResources("/static/", "./test-resources/"))
+
+        # when:
+        result = requests.get(f'http://localhost:{PORT}/static/nonexisting.txt')
 
         # then
         self.assertEqual(404, result.status_code)
+
+    def test_should_return_404_if_action_not_found(self):
+        # given
+        self._start_http_server(JsonGet("/test", lambda params: {'status': 'ok'}))
+
+        # when:
+        result = requests.get(f'http://localhost:{PORT}/nonexisting-endpoint')
+
+        # then
+        self.assertEqual(404, result.status_code)
+
+    def test_should_find_action_in_order_of_declaration(self):
+        # given
+        self._start_http_server([
+            JsonGet("/test", lambda params: {'status': '1'}),
+            JsonGet("/test", lambda params: {'status': '2'}),
+        ])
+
+        # when:
+        result = requests.get(f'http://localhost:{PORT}/test')
+
+        # then
+        self.assertEqual(200, result.status_code)
+        self.assertEqual('1', result.json()['status'])
+
 
     def _start_http_server(self, actions: Action | list[Action]):
         actions = actions if isinstance(actions, list) else [actions]
