@@ -1,4 +1,4 @@
-from server import *
+from .server import *
 
 __all__ = [
     'http_server',
