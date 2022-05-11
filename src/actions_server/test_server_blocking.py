@@ -1,11 +1,10 @@
 import logging
 import threading
 import time
-import unittest
 
 import requests
 
-from server import JsonGet, http_server
+from .server import JsonGet, http_server
 
 logging.basicConfig()
 
@@ -27,9 +26,9 @@ class RequestThenStopThread(threading.Thread):
         self.server.stop()
 
 
-class ServerTest(unittest.TestCase):
+class TestServer:
 
-    def tearDown(self) -> None:
+    def teardown_method(self, method) -> None:
         if self.server is not None:
             self.server.stop()
 
@@ -48,5 +47,5 @@ class ServerTest(unittest.TestCase):
         time_after_server_start = time.time()
 
         # then
-        self.assertLess(SLEEP_TIME, time_after_server_start - time_before_server_start)
-        self.assertEqual('ok', request_thread.response['status'])
+        assert SLEEP_TIME < time_after_server_start - time_before_server_start
+        assert 'ok' == request_thread.response['status']

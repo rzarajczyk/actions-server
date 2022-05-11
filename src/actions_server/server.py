@@ -150,7 +150,7 @@ class ValidationException(Exception):
 
 
 class ServerController:
-    def __init__(self, threads: list[threading.Thread], sock):
+    def __init__(self, threads: list, sock):
         self.threads = threads
         self.sock = sock
         self.semaphore = threading.Semaphore(0)
@@ -170,7 +170,7 @@ class ServerController:
         self.semaphore.release()
 
 
-def http_server(port: int, actions: list[Action], thread_count: int = 10) -> ServerController:
+def http_server(port: int, actions: list, thread_count: int = 10) -> ServerController:
     logger = logging.getLogger('web')
 
     logger.info('Starting httpserver on port %s in %s threads' % (port, thread_count))
