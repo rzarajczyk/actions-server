@@ -1,4 +1,5 @@
 import setuptools
+import time
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -6,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="actions-server",
-    version="0.0.5",
+    version="0.0.5-%s" % time.time(),
     description="A very simple, multi-threaded HTTP server",
     author="Rafał Zarajczyk",
     author_email="rzarajczyk@gmail.com",
