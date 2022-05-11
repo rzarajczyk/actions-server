@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="actions-server",
-    version="0.0.5-%s" % time.time(),
+    version="0.0.5-%s" % time.time_ns(),
     description="A very simple, multi-threaded HTTP server",
     author="Rafał Zarajczyk",
     author_email="rzarajczyk@gmail.com",
