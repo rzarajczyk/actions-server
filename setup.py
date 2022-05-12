@@ -1,13 +1,16 @@
+import os
+
 import setuptools
 import time
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+postfix = "" if os.getenv("RELEASE", "0") == "1" else ".dev%s" % round(time.time())
 
 setuptools.setup(
     name="actions-server",
-    version="0.0.5-%s" % time.time_ns(),
+    version="0.0.5%s" % postfix,
     description="A very simple, multi-threaded HTTP server",
     author="Rafał Zarajczyk",
     author_email="rzarajczyk@gmail.com",
