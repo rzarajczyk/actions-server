@@ -127,7 +127,6 @@ class StaticResources(Action):
             self._url_prefix += '/'
 
     def can_handle(self, method, path, params, payload):
-        print(path[len(self._url_prefix):])
         return method == 'GET' and path.startswith(self._url_prefix) and '/' not in path[len(self._url_prefix):]
 
     def handle(self, method, path, params, payload) -> Response:

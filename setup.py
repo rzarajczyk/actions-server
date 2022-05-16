@@ -10,7 +10,7 @@ postfix = "" if os.getenv("RELEASE", "0") == "1" else ".dev%s" % round(time.time
 
 setuptools.setup(
     name="actions-server",
-    version="0.0.6%s" % postfix,
+    version="0.0.7%s" % postfix,
     description="A very simple, multi-threaded HTTP server",
     author="Rafał Zarajczyk",
     author_email="rzarajczyk@gmail.com",
