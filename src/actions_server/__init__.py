@@ -9,7 +9,7 @@ __all__ = [
     'Redirect',
     'StaticResources',
     'ServerController',
-    'FileUpload',
+    'ProcessFileUploadThenRedirect',
     'ValidationException',
     'UploadedFile',
     'JsonOkResponse',

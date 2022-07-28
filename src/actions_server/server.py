@@ -110,7 +110,7 @@ class JsonPost(Action):
         return JsonOkResponse(output)
 
 
-class FileUpload(Action):
+class ProcessFileUploadThenRedirect(Action):
     def __init__(self, endpoint, callable):
         self.path = endpoint
         self.callable = callable
@@ -122,8 +122,8 @@ class FileUpload(Action):
         extractor = FileUploadExtractor(payload)
         if not extractor.is_file_uploaded():
             raise ValidationException("No uploaded file found")
-        output = self.callable(params, extractor.extract_uploaded_files())
-        return JsonOkResponse(output)
+        location = self.callable(params, extractor.extract_uploaded_files())
+        return RedirectResponse(location)
 
 
 class Redirect(Action):
