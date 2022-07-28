@@ -6,6 +6,9 @@ import socket
 import threading
 import urllib.parse as urlparse
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from io import BytesIO
+
+import multipart
 
 
 class Response:
@@ -107,6 +110,22 @@ class JsonPost(Action):
         return JsonOkResponse(output)
 
 
+class FileUpload(Action):
+    def __init__(self, endpoint, callable):
+        self.path = endpoint
+        self.callable = callable
+
+    def can_handle(self, method, path, params, payload):
+        return method == 'POST' and path == self.path
+
+    def handle(self, method, path, params, payload) -> Response:
+        extractor = FileUploadExtractor(payload)
+        if not extractor.is_file_uploaded():
+            raise ValidationException("No uploaded file found")
+        output = self.callable(params, extractor.extract_uploaded_files())
+        return JsonOkResponse(output)
+
+
 class Redirect(Action):
     def __init__(self, path_from, path_to):
         self.path_from = path_from
@@ -167,6 +186,37 @@ class ServerController:
         for thread in self.threads:
             thread.shutdown()
         self.semaphore.release()
+
+
+class UploadedFile:
+    def __init__(self, part: multipart.MultipartPart):
+        self.form_name = part.name
+        self.original_file_name = part.filename
+        self.__part = part
+
+    def save_as(self, path):
+        self.__part.save_as(path)
+
+
+class FileUploadExtractor:
+    def __init__(self, payload):
+        lines = payload.splitlines()
+        if len(lines) > 2 and lines[0].startswith(b'--') and b'Content-Disposition: form-data' in lines[1]:
+            self.payload = payload
+            self.boundary = lines[0][2:]
+        else:
+            self.payload = None
+            self.boundary = None
+
+    def is_file_uploaded(self):
+        return self.payload is not None
+
+    def extract_uploaded_files(self):
+        parts = multipart.MultipartParser(BytesIO(self.payload), self.boundary).parts()
+        result = {}
+        for part in parts:
+            result[part.name] = UploadedFile(part)
+        return result
 
 
 def http_server(port: int, actions: list, thread_count: int = 10) -> ServerController:
