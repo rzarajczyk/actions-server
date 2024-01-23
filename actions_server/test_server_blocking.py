@@ -2,7 +2,9 @@ import logging
 import threading
 import time
 
+import pytest
 import requests
+import os
 
 from .server import JsonGet, http_server
 
@@ -10,6 +12,8 @@ logging.basicConfig()
 
 PORT = 9999
 SLEEP_TIME = 10
+
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 
 class RequestThenStopThread(threading.Thread):
@@ -32,6 +36,7 @@ class TestServer:
         if self.server is not None:
             self.server.stop()
 
+    @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
     def test_should_block_main_thread(self):
         # given
         time_before_server_start = time.time()
