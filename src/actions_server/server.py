@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from io import BytesIO
 
 import multipart
+from deser import deser
 
 
 class Response:
@@ -34,7 +35,7 @@ class ErrorResponse(Response):
         return {'Content-type': 'application/json'}
 
     def response_body_bytes(self):
-        return json.dumps({'error': self._message}, indent=4, default=lambda o: o.__dict__).encode('utf-8')
+        return json.dumps({'error': self._message}, indent=4, default=deser.serialize).encode('utf-8')
 
 
 class RedirectResponse(Response):
@@ -56,7 +57,7 @@ class JsonOkResponse(Response):
         return {'Content-type': 'application/json'}
 
     def response_body_bytes(self):
-        return json.dumps(self._payload, indent=4, default=lambda o: o.__dict__).encode('utf-8')
+        return json.dumps(self._payload, indent=4, default=deser.serialize).encode('utf-8')
 
 
 class StaticResourceResponse(Response):
