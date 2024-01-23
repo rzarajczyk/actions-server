@@ -1,9 +1,9 @@
 import logging
-import pytest
 
+import pytest
 import requests
 
-from .server import JsonGet, http_server, Action, JsonPost, Redirect, StaticResources
+from .server import JsonGet, http_server, JsonPost, Redirect, StaticResources
 
 logging.basicConfig()
 
@@ -102,7 +102,7 @@ class TestServer:
     ])
     def test_should_serve_static_resources(self, filename, expected_length, expected_content_type):
         # given
-        self._start_http_server(StaticResources("/static", "./test-resources"))
+        self._start_http_server(StaticResources("/static", "./actions_server/test-resources"))
 
         # when:
         result = requests.get(f'http://localhost:{PORT}/static/{filename}')
@@ -114,7 +114,7 @@ class TestServer:
 
     def test_should_serve_static_resources_regardless_slash(self):
         # given
-        self._start_http_server(StaticResources("/static/", "./test-resources/"))
+        self._start_http_server(StaticResources("/static/", "./actions_server/test-resources/"))
 
         # when:
         result = requests.get(f'http://localhost:{PORT}/static/text.txt')
@@ -125,7 +125,7 @@ class TestServer:
 
     def test_should_return_404_if_static_resources_not_found(self):
         # given
-        self._start_http_server(StaticResources("/static/", "./test-resources/"))
+        self._start_http_server(StaticResources("/static/", "./actions_server/test-resources"))
 
         # when:
         result = requests.get(f'http://localhost:{PORT}/static/nonexisting.txt')

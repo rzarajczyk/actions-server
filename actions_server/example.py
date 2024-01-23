@@ -1,4 +1,4 @@
-from src.actions_server import *
+from actions_server import *
 
 ACTIONS = [
     JsonGet("/get", lambda params: {"response": "ok from GET action"}),

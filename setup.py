@@ -21,7 +21,7 @@ setuptools.setup(
     url="https://github.com/rzarajczyk/actions-server",
     keywords=["HTTP", "SERVER"],
     packages=['actions_server'],
-    package_dir={'actions_server': './src/actions_server'},
+    package_dir={'actions_server': './actions_server'},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
