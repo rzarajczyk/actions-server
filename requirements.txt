@@ -1,4 +1,4 @@
 pytest~=7.1.2
 requests~=2.31.0
 multipart~=0.2.4
-deser
+deser~=0.0.10.dev1706049855
